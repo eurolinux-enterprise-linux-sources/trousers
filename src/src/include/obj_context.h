@@ -80,13 +80,13 @@ TSS_RESULT obj_context_get_tpm_version(TSS_HCONTEXT, UINT32 *);
 TSS_RESULT obj_context_get_loadkey_ordinal(TSS_HCONTEXT, TPM_COMMAND_CODE *);
 void       obj_context_close(TSS_HCONTEXT);
 
-struct tcs_api_table *obj_context_get_tcs_api();
+struct tcs_api_table *obj_context_get_tcs_api(TSS_HCONTEXT);
 #define TCS_API(c) obj_context_get_tcs_api(c)
 
 
 #define CONTEXT_LIST_DECLARE		struct obj_list context_list
 #define CONTEXT_LIST_DECLARE_EXTERN	extern struct obj_list context_list
-#define CONTEXT_LIST_INIT()		list_init(&context_list)
+#define CONTEXT_LIST_INIT()		tspi_list_init(&context_list)
 #define CONTEXT_LIST_CONNECT(a,b)	obj_connectContext_list(&context_list, a, b)
 #define CONTEXT_LIST_CLOSE(a)		obj_list_close(&context_list, &__tspi_obj_context_free, a)
 

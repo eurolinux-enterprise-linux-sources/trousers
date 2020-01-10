@@ -46,7 +46,10 @@ tcs_wrap_CertifyKey(struct tcsd_thread_data *data)
 	if (getData(TCSD_PACKET_TYPE_UINT32, 0, &hContext, 0, &data->comm))
 		return TCSERR(TSS_E_INTERNAL_ERROR);
 
-	LogDebugFn("thread %zd context %x", THREAD_ID, hContext);
+	if ((result = ctx_verify_context(hContext)))
+		goto done;
+
+	LogDebugFn("thread %ld context %x", THREAD_ID, hContext);
 
 	if (getData(TCSD_PACKET_TYPE_UINT32, 1, &certHandle, 0, &data->comm))
 		return TCSERR(TSS_E_INTERNAL_ERROR);
@@ -112,7 +115,7 @@ tcs_wrap_CertifyKey(struct tcsd_thread_data *data)
 		}
 		free(outData);
 	} else
-		initData(&data->comm, 0);
+done:		initData(&data->comm, 0);
 
 	data->comm.hdr.u.result = result;
 

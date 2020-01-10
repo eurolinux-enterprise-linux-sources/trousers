@@ -23,14 +23,13 @@
 #include "capabilities.h"
 #include "tsplog.h"
 #include "obj.h"
-
+#include "tsp_tcsi_param.h"
 
 TSS_RESULT
 obj_context_add(TSS_HOBJECT *phObject)
 {
 	TSS_RESULT result;
 	struct tr_context_obj *context = calloc(1, sizeof(struct tr_context_obj));
-	unsigned len = strlen(TSS_LOCALHOST_STRING) + 1;
 
 	if (context == NULL) {
 		LogError("malloc of %zd bytes failed.", sizeof(struct tr_context_obj));
@@ -42,13 +41,13 @@ obj_context_add(TSS_HOBJECT *phObject)
 #else
 	context->silentMode = TSS_TSPATTRIB_CONTEXT_SILENT;
 #endif
-	if ((context->machineName = calloc(1, len)) == NULL) {
-		LogError("malloc of %u bytes failed", len);
+	if ((result = get_tcsd_hostname((char **)&context->machineName,
+					&context->machineNameLength)) != TSS_SUCCESS) {
 		free(context);
-		return TSPERR(TSS_E_OUTOFMEMORY);
+		return result;
 	}
-	memcpy(context->machineName, TSS_LOCALHOST_STRING, len);
-	context->machineNameLength = len;
+
+	LogDebug("Hostname to be used by the context is %s.", context->machineName);
 
 	context->hashMode = TSS_TSPATTRIB_HASH_MODE_NOT_NULL;
 	context->connection_policy = TSS_TSPATTRIB_CONTEXT_VERSION_V1_1;
@@ -133,13 +132,13 @@ obj_context_close(TSS_HCONTEXT tspContext)
 	if (context->transAuth.AuthHandle) {
 		RPC_FlushSpecific(tspContext, context->transAuth.AuthHandle, TPM_RT_TRANS);
 
-		memset(&context->transPub, 0, sizeof(TPM_TRANSPORT_PUBLIC));
-		memset(&context->transMod, 0, sizeof(TPM_MODIFIER_INDICATOR));
-		memset(&context->transSecret, 0, sizeof(TPM_TRANSPORT_AUTH));
-		memset(&context->transAuth, 0, sizeof(TPM_AUTH));
-		memset(&context->transLogIn, 0, sizeof(TPM_TRANSPORT_LOG_IN));
-		memset(&context->transLogOut, 0, sizeof(TPM_TRANSPORT_LOG_OUT));
-		memset(&context->transLogDigest, 0, sizeof(TPM_DIGEST));
+		__tspi_memset(&context->transPub, 0, sizeof(TPM_TRANSPORT_PUBLIC));
+		__tspi_memset(&context->transMod, 0, sizeof(TPM_MODIFIER_INDICATOR));
+		__tspi_memset(&context->transSecret, 0, sizeof(TPM_TRANSPORT_AUTH));
+		__tspi_memset(&context->transAuth, 0, sizeof(TPM_AUTH));
+		__tspi_memset(&context->transLogIn, 0, sizeof(TPM_TRANSPORT_LOG_IN));
+		__tspi_memset(&context->transLogOut, 0, sizeof(TPM_TRANSPORT_LOG_OUT));
+		__tspi_memset(&context->transLogDigest, 0, sizeof(TPM_DIGEST));
 	}
 #endif
 
@@ -186,8 +185,13 @@ obj_context_get_machine_name(TSS_HCONTEXT tspContext, UINT32 *size, BYTE **data)
 	if (context->machineNameLength == 0) {
 		*data = NULL;
 		*size = 0;
+		LogDebug("context->machineName is NULL.");
 	} else {
-		*data = calloc_tspi(obj->tspContext, context->machineNameLength);
+		/*
+		 * Don't use calloc_tspi because this memory is
+		 * not freed using "free_tspi"
+		 */
+		*data = calloc(1, context->machineNameLength);
 		if (*data == NULL) {
 			LogError("malloc of %u bytes failed.",
 					context->machineNameLength);
@@ -195,6 +199,7 @@ obj_context_get_machine_name(TSS_HCONTEXT tspContext, UINT32 *size, BYTE **data)
 			goto done;
 		}
 		*size = context->machineNameLength;
+		LogDebug("context->machineName: %s.", context->machineName);
 		memcpy(*data, context->machineName, *size);
 	}
 
@@ -791,7 +796,7 @@ obj_context_transport_establish(TSS_HCONTEXT tspContext, struct tr_context_obj *
 		tcsTransKey = TPM_KH_TRANSPORT;
 
 	/* If logging is on, do TPM commands spec rev106 step 8.a */
-	memset(context->transLogDigest.digest, 0, sizeof(TPM_DIGEST));
+	__tspi_memset(context->transLogDigest.digest, 0, sizeof(TPM_DIGEST));
 	if (context->flags & TSS_CONTEXT_FLAGS_TRANSPORT_AUTHENTIC) {
 		context->transLogIn.tag = TPM_TAG_TRANSPORT_LOG_IN;
 
@@ -805,7 +810,7 @@ obj_context_transport_establish(TSS_HCONTEXT tspContext, struct tr_context_obj *
 			return result;
 
 		/* step 8.a, ii */
-		memset(context->transLogIn.pubKeyHash.digest, 0, sizeof(TPM_DIGEST));
+		__tspi_memset(context->transLogIn.pubKeyHash.digest, 0, sizeof(TPM_DIGEST));
 
 		/* step 8.a, iii */
 		result = Trspi_HashInit(&hashCtx, TSS_HASH_SHA1);
@@ -1109,7 +1114,7 @@ obj_context_transport_execute(TSS_HCONTEXT     tspContext,
 			memcpy(context->transLogIn.pubKeyHash.digest, pubKeyHash->digest,
 			       sizeof(TPM_DIGEST));
 		else
-			memset(context->transLogIn.pubKeyHash.digest, 0, sizeof(TPM_DIGEST));
+			__tspi_memset(context->transLogIn.pubKeyHash.digest, 0, sizeof(TPM_DIGEST));
 
 		/* TPM Commands spec rev106 step 10.f */
 		result = Trspi_HashInit(&hashCtx, TSS_HASH_SHA1);
@@ -1416,13 +1421,13 @@ obj_context_transport_close(TSS_HCONTEXT   tspContext,
 	signInfo->dataLen = sizeof(TPM_DIGEST);
 
 	/* destroy all transport session info, except the key handle */
-	memset(&context->transPub, 0, sizeof(TPM_TRANSPORT_PUBLIC));
-	memset(&context->transMod, 0, sizeof(TPM_MODIFIER_INDICATOR));
-	memset(&context->transSecret, 0, sizeof(TPM_TRANSPORT_AUTH));
-	memset(&context->transAuth, 0, sizeof(TPM_AUTH));
-	memset(&context->transLogIn, 0, sizeof(TPM_TRANSPORT_LOG_IN));
-	memset(&context->transLogOut, 0, sizeof(TPM_TRANSPORT_LOG_OUT));
-	memset(&context->transLogDigest, 0, sizeof(TPM_DIGEST));
+	__tspi_memset(&context->transPub, 0, sizeof(TPM_TRANSPORT_PUBLIC));
+	__tspi_memset(&context->transMod, 0, sizeof(TPM_MODIFIER_INDICATOR));
+	__tspi_memset(&context->transSecret, 0, sizeof(TPM_TRANSPORT_AUTH));
+	__tspi_memset(&context->transAuth, 0, sizeof(TPM_AUTH));
+	__tspi_memset(&context->transLogIn, 0, sizeof(TPM_TRANSPORT_LOG_IN));
+	__tspi_memset(&context->transLogOut, 0, sizeof(TPM_TRANSPORT_LOG_OUT));
+	__tspi_memset(&context->transLogDigest, 0, sizeof(TPM_DIGEST));
 
 done_disabled:
 	context->flags &= ~TSS_CONTEXT_FLAGS_TRANSPORT_ESTABLISHED;

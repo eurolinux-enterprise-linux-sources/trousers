@@ -17,7 +17,7 @@ libtspi_la_LIBADD=${top_builddir}/src/trspi/libtrousers.la
 # 5. If any interfaces have been added since the last public release, then increment age.
 # 6. If any interfaces have been removed since the last public release, then set age to 0.
 
-libtspi_la_LDFLAGS=-version-info 2:3:1 -lpthread @CRYPTOLIB@
+libtspi_la_LDFLAGS=-version-info 3:0:2 -lpthread @CRYPTOLIB@
 
 libtspi_la_CFLAGS=-I$(top_srcdir)/src/include -DAPPID=\"TSPI\" -DVAR_PREFIX=\"@localstatedir@\" -DETC_PREFIX=\"@sysconfdir@\"
 
@@ -33,7 +33,8 @@ libtspi_la_SOURCES=log.c \
                    rpc/@RPC@/rpc_context.c \
                    rpc/tcs_api.c \
                    rpc/hosttable.c \
-                   rpc/@RPC@/rpc.c
+                   rpc/@RPC@/rpc.c \
+                   tsp_tcsi_param.c
 
 if TSS_BUILD_ASYM_CRYPTO
 libtspi_la_SOURCES+=tsp_asym.c

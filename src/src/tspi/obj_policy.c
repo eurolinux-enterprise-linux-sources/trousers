@@ -195,7 +195,7 @@ obj_policy_get_secret(TSS_HPOLICY hPolicy, TSS_BOOL ctx, TCPA_SECRET *secret)
 
 	policy = (struct tr_policy_obj *)obj->data;
 
-	memset(&null_secret, 0, sizeof(TCPA_SECRET));
+	__tspi_memset(&null_secret, 0, sizeof(TCPA_SECRET));
 
 	switch (policy->SecretMode) {
 		case TSS_SECRET_MODE_POPUP:
@@ -247,7 +247,7 @@ obj_policy_flush_secret(TSS_HPOLICY hPolicy)
 
 	policy = (struct tr_policy_obj *)obj->data;
 
-	memset(&policy->Secret, 0, policy->SecretSize);
+	__tspi_memset(&policy->Secret, 0, policy->SecretSize);
 	policy->SecretSet = FALSE;
 
 	obj_list_put(&policy_list);
@@ -302,6 +302,25 @@ done:
 }
 
 TSS_RESULT
+obj_policy_is_secret_set(TSS_HPOLICY hPolicy, TSS_BOOL *secretSet) 
+{
+	struct tsp_object *obj;
+	struct tr_policy_obj *policy;
+	TSS_RESULT result = TSS_SUCCESS;
+
+	if ((obj = obj_list_get_obj(&policy_list, hPolicy)) == NULL)
+		return TSPERR(TSS_E_INVALID_HANDLE);
+
+	policy = (struct tr_policy_obj *)obj->data;
+	
+	*secretSet = policy->SecretSet;
+	obj_list_put(&policy_list);
+	
+	return result;
+}
+	
+
+TSS_RESULT
 obj_policy_set_secret(TSS_HPOLICY hPolicy, TSS_FLAG mode, UINT32 size, BYTE *data)
 {
 	TCPA_DIGEST digest;
@@ -309,7 +328,7 @@ obj_policy_set_secret(TSS_HPOLICY hPolicy, TSS_FLAG mode, UINT32 size, BYTE *dat
 	TSS_BOOL secret_set = TRUE;
 	TSS_RESULT result;
 
-	memset(&digest.digest, 0, sizeof(TCPA_DIGEST));
+	__tspi_memset(&digest.digest, 0, sizeof(TCPA_DIGEST));
 
 	switch (mode) {
 		case TSS_SECRET_MODE_PLAIN:

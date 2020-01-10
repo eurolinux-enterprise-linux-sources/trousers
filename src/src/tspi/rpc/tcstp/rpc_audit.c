@@ -16,6 +16,7 @@
 #include "trousers/tss.h"
 #include "trousers/trousers.h"
 #include "trousers_types.h"
+#include "spi_utils.h"
 #include "tsplog.h"
 #include "hosttable.h"
 #include "tcsd_wrap.h"
@@ -99,16 +100,19 @@ RPC_GetAuditDigest_TP(struct host_table_entry *hte,
 		}
 		if (getData(TCSD_PACKET_TYPE_PBYTE, 2, *counterValue, *counterValueSize, &hte->comm)) {
 			free(*counterValue);
+			*counterValue = NULL;
 			result = TSPERR(TSS_E_INTERNAL_ERROR);
 			goto done;
 		}
 		if (getData(TCSD_PACKET_TYPE_BOOL, 3, more, 0, &hte->comm)) {
 			free(*counterValue);
+			*counterValue = NULL;
 			result = TSPERR(TSS_E_INTERNAL_ERROR);
 			goto done;
 		}
 		if (getData(TCSD_PACKET_TYPE_UINT32, 4, ordSize, 0, &hte->comm)) {
 			free(*counterValue);
+			*counterValue = NULL;
 			result = TSPERR(TSS_E_INTERNAL_ERROR);
 			goto done;
 		}
@@ -116,12 +120,15 @@ RPC_GetAuditDigest_TP(struct host_table_entry *hte,
 		if (*ordList == NULL) {
 			LogError("malloc of %u bytes failed.", *ordSize);
 			free(*counterValue);
+			*counterValue = NULL;
 			result = TSPERR(TSS_E_OUTOFMEMORY);
 			goto done;
 		}
 		if (getData(TCSD_PACKET_TYPE_PBYTE, 5, *ordList, *ordSize * sizeof(UINT32), &hte->comm)) {
 			free(*counterValue);
+			*counterValue = NULL;
 			free(*ordList);
+			*ordList = NULL;
 			result = TSPERR(TSS_E_INTERNAL_ERROR);
 			goto done;
 		}
@@ -152,7 +159,7 @@ RPC_GetAuditDigestSigned_TP(struct host_table_entry *hte,
 	hte->comm.hdr.u.ordinal = TCSD_ORD_GETAUDITDIGESTSIGNED;
 	LogDebugFn("TCS Context: 0x%x", hte->tcsContext);
 
-	memset(&null_auth, 0, sizeof(TPM_AUTH));
+	__tspi_memset(&null_auth, 0, sizeof(TPM_AUTH));
 
 	if (setData(TCSD_PACKET_TYPE_UINT32, 0, &hte->tcsContext, 0, &hte->comm))
 		return TSPERR(TSS_E_INTERNAL_ERROR);

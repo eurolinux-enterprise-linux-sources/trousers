@@ -47,7 +47,10 @@ tcs_wrap_Delegate_Manage(struct tcsd_thread_data *data)
 	if (getData(TCSD_PACKET_TYPE_UINT32, 0, &hContext, 0, &data->comm))
 		return TCSERR(TSS_E_INTERNAL_ERROR);
 
-	LogDebugFn("thread %zd context %x", THREAD_ID, hContext);
+	if ((result = ctx_verify_context(hContext)))
+		goto done;
+
+	LogDebugFn("thread %ld context %x", THREAD_ID, hContext);
 
 	if (getData(TCSD_PACKET_TYPE_UINT32, 1, &familyId, 0, &data->comm))
 		return TCSERR(TSS_E_INTERNAL_ERROR);
@@ -106,7 +109,7 @@ tcs_wrap_Delegate_Manage(struct tcsd_thread_data *data)
 		}
 		free(retData);
 	} else
-		initData(&data->comm, 0);
+done:		initData(&data->comm, 0);
 
 	data->comm.hdr.u.result = result;
 
@@ -133,7 +136,10 @@ tcs_wrap_Delegate_CreateKeyDelegation(struct tcsd_thread_data *data)
 	if (getData(TCSD_PACKET_TYPE_UINT32, 0, &hContext, 0, &data->comm))
 		return TCSERR(TSS_E_INTERNAL_ERROR);
 
-	LogDebugFn("thread %zd context %x", THREAD_ID, hContext);
+	if ((result = ctx_verify_context(hContext)))
+		goto done;
+
+	LogDebugFn("thread %ld context %x", THREAD_ID, hContext);
 
 	if (getData(TCSD_PACKET_TYPE_UINT32, 1, &hKey, 0, &data->comm))
 		return TCSERR(TSS_E_INTERNAL_ERROR);
@@ -194,7 +200,7 @@ tcs_wrap_Delegate_CreateKeyDelegation(struct tcsd_thread_data *data)
 		}
 		free(blob);
 	} else
-		initData(&data->comm, 0);
+done:		initData(&data->comm, 0);
 
 	data->comm.hdr.u.result = result;
 
@@ -221,7 +227,10 @@ tcs_wrap_Delegate_CreateOwnerDelegation(struct tcsd_thread_data *data)
 	if (getData(TCSD_PACKET_TYPE_UINT32, 0, &hContext, 0, &data->comm))
 		return TCSERR(TSS_E_INTERNAL_ERROR);
 
-	LogDebugFn("thread %zd context %x", THREAD_ID, hContext);
+	if ((result = ctx_verify_context(hContext)))
+		goto done;
+
+	LogDebugFn("thread %ld context %x", THREAD_ID, hContext);
 
 	if (getData(TCSD_PACKET_TYPE_BOOL, 1, &increment, 0, &data->comm))
 		return TCSERR(TSS_E_INTERNAL_ERROR);
@@ -282,7 +291,7 @@ tcs_wrap_Delegate_CreateOwnerDelegation(struct tcsd_thread_data *data)
 		}
 		free(blob);
 	} else
-		initData(&data->comm, 0);
+done:		initData(&data->comm, 0);
 
 	data->comm.hdr.u.result = result;
 
@@ -305,7 +314,10 @@ tcs_wrap_Delegate_LoadOwnerDelegation(struct tcsd_thread_data *data)
 	if (getData(TCSD_PACKET_TYPE_UINT32, 0, &hContext, 0, &data->comm))
 		return TCSERR(TSS_E_INTERNAL_ERROR);
 
-	LogDebugFn("thread %zd context %x", THREAD_ID, hContext);
+	if ((result = ctx_verify_context(hContext)))
+		goto done;
+
+	LogDebugFn("thread %ld context %x", THREAD_ID, hContext);
 
 	if (getData(TCSD_PACKET_TYPE_UINT32, 1, &index, 0, &data->comm))
 		return TCSERR(TSS_E_INTERNAL_ERROR);
@@ -349,7 +361,7 @@ tcs_wrap_Delegate_LoadOwnerDelegation(struct tcsd_thread_data *data)
 			}
 		}
 	} else
-		initData(&data->comm, 0);
+done:		initData(&data->comm, 0);
 
 	data->comm.hdr.u.result = result;
 
@@ -369,7 +381,10 @@ tcs_wrap_Delegate_ReadTable(struct tcsd_thread_data *data)
 	if (getData(TCSD_PACKET_TYPE_UINT32, 0, &hContext, 0, &data->comm))
 		return TCSERR(TSS_E_INTERNAL_ERROR);
 
-	LogDebugFn("thread %zd context %x", THREAD_ID, hContext);
+	if ((result = ctx_verify_context(hContext)))
+		goto done;
+
+	LogDebugFn("thread %ld context %x", THREAD_ID, hContext);
 
 	MUTEX_LOCK(tcsp_lock);
 
@@ -402,7 +417,7 @@ tcs_wrap_Delegate_ReadTable(struct tcsd_thread_data *data)
 		}
 		free(delegateTable);
 	} else
-		initData(&data->comm, 0);
+done:		initData(&data->comm, 0);
 
 	data->comm.hdr.u.result = result;
 
@@ -427,7 +442,10 @@ tcs_wrap_Delegate_UpdateVerificationCount(struct tcsd_thread_data *data)
 	if (getData(TCSD_PACKET_TYPE_UINT32, 0, &hContext, 0, &data->comm))
 		return TCSERR(TSS_E_INTERNAL_ERROR);
 
-	LogDebugFn("thread %zd context %x", THREAD_ID, hContext);
+	if ((result = ctx_verify_context(hContext)))
+		goto done;
+
+	LogDebugFn("thread %ld context %x", THREAD_ID, hContext);
 
 	if (getData(TCSD_PACKET_TYPE_UINT32, 1, &inputSize, 0, &data->comm))
 		return TCSERR(TSS_E_INTERNAL_ERROR);
@@ -480,7 +498,7 @@ tcs_wrap_Delegate_UpdateVerificationCount(struct tcsd_thread_data *data)
 		}
 		free(output);
 	} else
-		initData(&data->comm, 0);
+done:		initData(&data->comm, 0);
 
 	data->comm.hdr.u.result = result;
 
@@ -498,7 +516,10 @@ tcs_wrap_Delegate_VerifyDelegation(struct tcsd_thread_data *data)
 	if (getData(TCSD_PACKET_TYPE_UINT32, 0, &hContext, 0, &data->comm))
 		return TCSERR(TSS_E_INTERNAL_ERROR);
 
-	LogDebugFn("thread %zd context %x", THREAD_ID, hContext);
+	if ((result = ctx_verify_context(hContext)))
+		goto done;
+
+	LogDebugFn("thread %ld context %x", THREAD_ID, hContext);
 
 	if (getData(TCSD_PACKET_TYPE_UINT32, 1, &delegateSize, 0, &data->comm))
 		return TCSERR(TSS_E_INTERNAL_ERROR);
@@ -519,7 +540,7 @@ tcs_wrap_Delegate_VerifyDelegation(struct tcsd_thread_data *data)
 
 	MUTEX_UNLOCK(tcsp_lock);
 	free(delegate);
-
+done:
 	initData(&data->comm, 0);
 
 	data->comm.hdr.u.result = result;
@@ -542,7 +563,10 @@ tcs_wrap_DSAP(struct tcsd_thread_data *data)
 	if (getData(TCSD_PACKET_TYPE_UINT32, 0, &hContext, 0, &data->comm))
 		return TCSERR(TSS_E_INTERNAL_ERROR);
 
-	LogDebugFn("thread %zd context %x", THREAD_ID, hContext);
+	if ((result = ctx_verify_context(hContext)))
+		goto done;
+
+	LogDebugFn("thread %ld context %x", THREAD_ID, hContext);
 
 	if (getData(TCSD_PACKET_TYPE_UINT16, 1, &entityType, 0, &data->comm))
 		return TCSERR(TSS_E_INTERNAL_ERROR);
@@ -581,7 +605,7 @@ tcs_wrap_DSAP(struct tcsd_thread_data *data)
 		if (setData(TCSD_PACKET_TYPE_NONCE, 2, &nonceEvenDSAP, 0, &data->comm))
 			return TCSERR(TSS_E_INTERNAL_ERROR);
 	} else
-		initData(&data->comm, 0);
+done:		initData(&data->comm, 0);
 
 	data->comm.hdr.u.result = result;
 

@@ -56,7 +56,10 @@ tcs_wrap_MakeIdentity(struct tcsd_thread_data *data)
 	if (getData(TCSD_PACKET_TYPE_UINT32, 0, &hContext, 0, &data->comm))
 		return TCSERR(TSS_E_INTERNAL_ERROR);
 
-	LogDebugFn("thread %zd context %x", THREAD_ID, hContext);
+	if ((result = ctx_verify_context(hContext)))
+		goto done;
+
+	LogDebugFn("thread %ld context %x", THREAD_ID, hContext);
 
 	if (getData(TCSD_PACKET_TYPE_ENCAUTH, 1, &identityAuth, 0, &data->comm))
 		return TCSERR(TSS_E_INTERNAL_ERROR);
@@ -139,7 +142,7 @@ tcs_wrap_MakeIdentity(struct tcsd_thread_data *data)
 		free(prgbPlatCred);
 		free(prgbConfCred);
 	} else
-		initData(&data->comm, 0);
+done:		initData(&data->comm, 0);
 
 	data->comm.hdr.u.result = result;
 
@@ -168,7 +171,10 @@ tcs_wrap_ActivateIdentity(struct tcsd_thread_data *data)
 	if (getData(TCSD_PACKET_TYPE_UINT32, 0, &hContext, 0, &data->comm))
 		return TCSERR(TSS_E_INTERNAL_ERROR);
 
-	LogDebugFn("thread %zd context %x", THREAD_ID, hContext);
+	if ((result = ctx_verify_context(hContext)))
+		goto done;
+
+	LogDebugFn("thread %ld context %x", THREAD_ID, hContext);
 
 	if (getData(TCSD_PACKET_TYPE_UINT32, 1, &idKeyHandle, 0, &data->comm))
 		return TCSERR(TSS_E_INTERNAL_ERROR);
@@ -232,7 +238,7 @@ tcs_wrap_ActivateIdentity(struct tcsd_thread_data *data)
 		}
 		free(SymmetricKey);
 	} else
-		initData(&data->comm, 0);
+done:		initData(&data->comm, 0);
 
 	data->comm.hdr.u.result = result;
 
@@ -253,13 +259,16 @@ tcs_wrap_GetCredential(struct tcsd_thread_data *data)
 	if (getData(TCSD_PACKET_TYPE_UINT32, 0, &hContext, 0, &data->comm))
 		return TCSERR(TSS_E_INTERNAL_ERROR);
 
+	if ((result = ctx_verify_context(hContext)))
+		goto done;
+
 	if (getData(TCSD_PACKET_TYPE_UINT32, 1, &CredType, 0, &data->comm))
 		return TCSERR(TSS_E_INTERNAL_ERROR);
 
 	if (getData(TCSD_PACKET_TYPE_UINT32, 2, &CredAccessMode, 0, &data->comm))
 		return TCSERR(TSS_E_INTERNAL_ERROR);
 
-	LogDebugFn("thread %zd context %x", THREAD_ID, hContext);
+	LogDebugFn("thread %ld context %x", THREAD_ID, hContext);
 
 	result = TCS_GetCredential_Internal(hContext, CredType, CredAccessMode, 
 					    &CredSize, &CredData);
@@ -273,7 +282,7 @@ tcs_wrap_GetCredential(struct tcsd_thread_data *data)
 
 		free(CredData);
 	} else
-		initData(&data->comm, 0);
+done:		initData(&data->comm, 0);
 
 	data->comm.hdr.u.result = result;
 	return TSS_SUCCESS;

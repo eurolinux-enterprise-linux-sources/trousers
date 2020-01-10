@@ -359,7 +359,7 @@ validateReturnAuth(BYTE *secret, BYTE *hash, TPM_AUTH *auth)
 	memcpy(digest, &auth->HMAC, 20);
 	HMAC_Auth(secret, hash, auth);
 
-	return ((TSS_BOOL) memcmp(digest, &auth->HMAC, 20) != 0);
+	return ((TSS_BOOL) (memcmp(digest, &auth->HMAC, 20) != 0));
 }
 
 void
@@ -774,7 +774,7 @@ authsess_xsap_init(TSS_HCONTEXT     tspContext,
 		   struct authsess  **xsess)
 {
 	TSS_RESULT result;
-	TSS_BOOL authdatausage = FALSE, req_auth = TRUE, get_child_auth = TRUE;
+	TSS_BOOL authdatausage = FALSE, req_auth = TRUE, get_child_auth = TRUE, secret_set = FALSE;
 	BYTE hmacBlob[2 * sizeof(TPM_DIGEST)];
 	UINT64 offset;
 	TSS_BOOL new_secret = TR_SECRET_CTX_NOT_NEW;
@@ -921,7 +921,10 @@ authsess_xsap_init(TSS_HCONTEXT     tspContext,
 					goto error;
 			}
 
-			if (!sess->hUsageChild) {
+			if ((result = obj_policy_is_secret_set(sess->hUsageChild, &secret_set)))
+				goto error;
+
+			if (!secret_set) {
 				result = TSPERR(TSS_E_TSP_AUTHREQUIRED);
 				goto error;
 			}
@@ -1208,7 +1211,7 @@ Transport_TerminateHandle(TSS_HCONTEXT tspContext, /* in */
 			  TCS_AUTHHANDLE handle)   /* in */
 {
 	TSS_RESULT result;
-	TCS_HANDLE handlesLen = 0, *handles;
+	TCS_HANDLE handlesLen = 0, *handles, *handles_track;
 
 	/* Call ExecuteTransport */
 	handlesLen = 1;
@@ -1218,9 +1221,17 @@ Transport_TerminateHandle(TSS_HCONTEXT tspContext, /* in */
 	}
 
 	*handles = handle;
+    handles_track = handles;
 
+    // Since the call tree of this function can possibly alloc memory 
+    // (check RPC_ExecuteTransport_TP function), its better to keep track of
+    // the handle.
 	result = obj_context_transport_execute(tspContext, TPM_ORD_Terminate_Handle, 0, NULL,
 					       NULL, &handlesLen, &handles, NULL, NULL, NULL, NULL);
+
+	free(handles);
+    handles = NULL;
+    free(handles_track);
 
 	return result;
 }

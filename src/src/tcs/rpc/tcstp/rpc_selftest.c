@@ -36,7 +36,7 @@ tcs_wrap_SelfTestFull(struct tcsd_thread_data *data)
 	if (getData(TCSD_PACKET_TYPE_UINT32, 0, &hContext, 0, &data->comm))
 		return TCSERR(TSS_E_INTERNAL_ERROR);
 
-	LogDebugFn("thread %zd context %x", THREAD_ID, hContext);
+	LogDebugFn("thread %ld context %x", THREAD_ID, hContext);
 
 	MUTEX_LOCK(tcsp_lock);
 
@@ -66,7 +66,10 @@ tcs_wrap_CertifySelfTest(struct tcsd_thread_data *data)
 	if (getData(TCSD_PACKET_TYPE_UINT32, 0, &hContext, 0, &data->comm))
 		return TCSERR(TSS_E_INTERNAL_ERROR);
 
-	LogDebugFn("thread %zd context %x", THREAD_ID, hContext);
+	if ((result = ctx_verify_context(hContext)))
+		goto done;
+
+	LogDebugFn("thread %ld context %x", THREAD_ID, hContext);
 
         if (getData(TCSD_PACKET_TYPE_UINT32, 1, &hKey, 0, &data->comm))
                 return TCSERR(TSS_E_INTERNAL_ERROR);
@@ -108,7 +111,7 @@ tcs_wrap_CertifySelfTest(struct tcsd_thread_data *data)
 		}
 		free(sigData);
 	} else
-		initData(&data->comm, 0);
+done:		initData(&data->comm, 0);
 
 
 	data->comm.hdr.u.result = result;
@@ -126,7 +129,7 @@ tcs_wrap_GetTestResult(struct tcsd_thread_data *data)
 	if (getData(TCSD_PACKET_TYPE_UINT32, 0, &hContext, 0, &data->comm))
 		return TCSERR(TSS_E_INTERNAL_ERROR);
 
-	LogDebugFn("thread %zd context %x", THREAD_ID, hContext);
+	LogDebugFn("thread %ld context %x", THREAD_ID, hContext);
 
 	MUTEX_LOCK(tcsp_lock);
 

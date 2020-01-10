@@ -8,6 +8,7 @@
  *
  */
 
+#include <limits.h>
 #include <stdlib.h>
 #include <sys/types.h>
 #include <sys/file.h>
@@ -296,7 +297,7 @@ load_from_system_ps(TSS_HCONTEXT tspContext, TSS_UUID *uuid, TSS_HKEY *phKey)
 	TCS_LOADKEY_INFO info;
 	BYTE *keyBlob = NULL;
 
-	memset(&info, 0, sizeof(TCS_LOADKEY_INFO));
+	__tspi_memset(&info, 0, sizeof(TCS_LOADKEY_INFO));
 
 	result = TCSP_LoadKeyByUUID(tspContext, uuidData, &info, &tcsKeyHandle);
 

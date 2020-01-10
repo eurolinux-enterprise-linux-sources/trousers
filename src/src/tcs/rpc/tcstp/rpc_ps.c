@@ -42,7 +42,10 @@ tcs_wrap_RegisterKey(struct tcsd_thread_data *data)
 	if (getData(TCSD_PACKET_TYPE_UINT32, 0, &hContext, 0, &data->comm))
 		return TCSERR(TSS_E_INTERNAL_ERROR);
 
-	LogDebugFn("thread %zd context %x", THREAD_ID, hContext);
+	if ((result = ctx_verify_context(hContext)))
+		goto done;
+
+	LogDebugFn("thread %ld context %x", THREAD_ID, hContext);
 
 	if (getData(TCSD_PACKET_TYPE_UUID, 1, &WrappingKeyUUID, 0, &data->comm))
 		return TCSERR(TSS_E_INTERNAL_ERROR);
@@ -87,7 +90,7 @@ tcs_wrap_RegisterKey(struct tcsd_thread_data *data)
 				     gbVendorData);
 	free(rgbKey);
 	free(gbVendorData);
-
+done:
 	initData(&data->comm, 0);
 	data->comm.hdr.u.result = result;
 	return TSS_SUCCESS;
@@ -103,13 +106,16 @@ tcs_wrap_UnregisterKey(struct tcsd_thread_data *data)
 	if (getData(TCSD_PACKET_TYPE_UINT32, 0, &hContext, 0, &data->comm))
 		return TCSERR(TSS_E_INTERNAL_ERROR);
 
-	LogDebugFn("thread %zd context %x", THREAD_ID, hContext);
+	if ((result = ctx_verify_context(hContext)))
+		goto done;
+
+	LogDebugFn("thread %ld context %x", THREAD_ID, hContext);
 
 	if (getData(TCSD_PACKET_TYPE_UUID, 1, &uuid, 0, &data->comm))
 		return TCSERR(TSS_E_INTERNAL_ERROR);
 
 	result = TCS_UnregisterKey_Internal(hContext, uuid);
-
+done:
 	initData(&data->comm, 0);
 	data->comm.hdr.u.result = result;
 
@@ -128,7 +134,10 @@ tcs_wrap_GetRegisteredKeyBlob(struct tcsd_thread_data *data)
 	if (getData(TCSD_PACKET_TYPE_UINT32, 0, &hContext, 0, &data->comm))
 		return TCSERR(TSS_E_INTERNAL_ERROR);
 
-	LogDebugFn("thread %zd context %x", THREAD_ID, hContext);
+	if ((result = ctx_verify_context(hContext)))
+		goto done;
+
+	LogDebugFn("thread %ld context %x", THREAD_ID, hContext);
 
 	if (getData(TCSD_PACKET_TYPE_UUID, 1, &uuid, 0, &data->comm))
 		return TCSERR(TSS_E_INTERNAL_ERROR);
@@ -148,7 +157,7 @@ tcs_wrap_GetRegisteredKeyBlob(struct tcsd_thread_data *data)
 		}
 		free(prgbKey);
 	} else
-		initData(&data->comm, 0);
+done:		initData(&data->comm, 0);
 
 	data->comm.hdr.u.result = result;
 	return TSS_SUCCESS;
@@ -166,7 +175,10 @@ tcs_wrap_LoadKeyByUUID(struct tcsd_thread_data *data)
 	if (getData(TCSD_PACKET_TYPE_UINT32, 0, &hContext, 0, &data->comm))
 		return TCSERR(TSS_E_INTERNAL_ERROR);
 
-	LogDebugFn("thread %zd context %x", THREAD_ID, hContext);
+	if ((result = ctx_verify_context(hContext)))
+		goto done;
+
+	LogDebugFn("thread %ld context %x", THREAD_ID, hContext);
 
 	if (getData(TCSD_PACKET_TYPE_UUID, 1, &uuid, 0, &data->comm))
 		return TCSERR(TSS_E_INTERNAL_ERROR);
@@ -198,7 +210,7 @@ tcs_wrap_LoadKeyByUUID(struct tcsd_thread_data *data)
 				return TCSERR(TSS_E_INTERNAL_ERROR);
 			}
 		} else
-			initData(&data->comm, 0);
+done:			initData(&data->comm, 0);
 
 	}
 	data->comm.hdr.u.result = result;
@@ -219,7 +231,10 @@ tcs_wrap_EnumRegisteredKeys(struct tcsd_thread_data *data)
 	if (getData(TCSD_PACKET_TYPE_UINT32, 0, &hContext, 0, &data->comm))
 		return TCSERR(TSS_E_INTERNAL_ERROR);
 
-	LogDebugFn("thread %zd context %x", THREAD_ID, hContext);
+	if ((result = ctx_verify_context(hContext)))
+		goto done;
+
+	LogDebugFn("thread %ld context %x", THREAD_ID, hContext);
 
 	result = getData(TCSD_PACKET_TYPE_UUID , 1, &uuid, 0, &data->comm);
 	if (result == TSS_TCP_RPC_BAD_PACKET_TYPE)
@@ -251,7 +266,7 @@ tcs_wrap_EnumRegisteredKeys(struct tcsd_thread_data *data)
 		}
 		free(pKeyHierarchy);
 	} else
-		initData(&data->comm, 0);
+done:		initData(&data->comm, 0);
 
 	data->comm.hdr.u.result = result;
 
@@ -272,7 +287,10 @@ tcs_wrap_EnumRegisteredKeys2(struct tcsd_thread_data *data)
 	if (getData(TCSD_PACKET_TYPE_UINT32, 0, &hContext, 0, &data->comm))
 		return TCSERR(TSS_E_INTERNAL_ERROR);
 
-	LogDebugFn("thread %zd context %x", THREAD_ID, hContext);
+	if ((result = ctx_verify_context(hContext)))
+		goto done;
+
+	LogDebugFn("thread %ld context %x", THREAD_ID, hContext);
 
 	result = getData(TCSD_PACKET_TYPE_UUID , 1, &uuid, 0, &data->comm);
 	if (result == TSS_TCP_RPC_BAD_PACKET_TYPE)
@@ -304,7 +322,7 @@ tcs_wrap_EnumRegisteredKeys2(struct tcsd_thread_data *data)
 		}
 		free(pKeyHierarchy);
 	} else
-		initData(&data->comm, 0);
+done:		initData(&data->comm, 0);
 
 	data->comm.hdr.u.result = result;
 
@@ -322,7 +340,10 @@ tcs_wrap_GetRegisteredKeyByPublicInfo(struct tcsd_thread_data *data)
 	if (getData(TCSD_PACKET_TYPE_UINT32, 0, &hContext, 0, &data->comm))
 		return TCSERR(TSS_E_INTERNAL_ERROR);
 
-	LogDebugFn("thread %zd context %x", THREAD_ID, hContext);
+	if ((result = ctx_verify_context(hContext)))
+		goto done;
+
+	LogDebugFn("thread %ld context %x", THREAD_ID, hContext);
 
 	if (getData(TCSD_PACKET_TYPE_UINT32, 1, &algId, 0, &data->comm))
 		return TCSERR(TSS_E_INTERNAL_ERROR);
@@ -355,7 +376,7 @@ tcs_wrap_GetRegisteredKeyByPublicInfo(struct tcsd_thread_data *data)
 		}
 		free(keyBlob);
 	} else
-		initData(&data->comm, 0);
+done:		initData(&data->comm, 0);
 
 	data->comm.hdr.u.result = result;
 
@@ -484,7 +505,7 @@ UnloadBlob_KM_KEYINFO(UINT64 *offset, BYTE *blob, TSS_KM_KEYINFO *info)
 	UnloadBlob_VERSION(offset, blob, (TPM_VERSION *)&(info->versionInfo));
 	UnloadBlob_UUID(offset, blob, &info->keyUUID);
 	UnloadBlob_UUID(offset, blob, &info->parentKeyUUID);
-	UnloadBlob_BYTE(offset, blob, &info->bAuthDataUsage);
+	UnloadBlob_BYTE(offset, &info->bAuthDataUsage, blob);
 	UnloadBlob_BOOL(offset, &info->fIsLoaded, blob);
 	UnloadBlob_UINT32(offset, &info->ulVendorDataLength, blob);
 	UnloadBlob(offset, info->ulVendorDataLength, info->rgbVendorData, blob);

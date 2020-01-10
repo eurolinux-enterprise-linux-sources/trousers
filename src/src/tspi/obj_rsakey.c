@@ -69,12 +69,14 @@ obj_rsakey_add(TSS_HCONTEXT tspContext, TSS_FLAG initFlags, TSS_HOBJECT *phObjec
 			rsakey->key.hdr.key11.ver = ver;
 			rsakey->type = TSS_KEY_STRUCT_KEY;
 			rsakey->pcrInfoType = TSS_PCRS_STRUCT_INFO;
+			rsakey->key.keyFlags = 0;
 			break;
 		case TSS_KEY_STRUCT_KEY12:
 			rsakey->key.hdr.key12.tag = TPM_TAG_KEY12;
 			rsakey->key.hdr.key12.fill = 0;
 			rsakey->type = TSS_KEY_STRUCT_KEY12;
 			rsakey->pcrInfoType = TSS_PCRS_STRUCT_INFO_LONG;
+			rsakey->key.keyFlags = TPM_PCRIGNOREDONREAD;
 			break;
 		default:
 			free(rsakey);
@@ -85,7 +87,7 @@ obj_rsakey_add(TSS_HCONTEXT tspContext, TSS_FLAG initFlags, TSS_HOBJECT *phObjec
 	if (initFlags == TSS_KEY_EMPTY_KEY)
 		goto add_key;
 
-	memset(&rsaKeyParms, 0, sizeof(TCPA_RSA_KEY_PARMS));
+	__tspi_memset(&rsaKeyParms, 0, sizeof(TCPA_RSA_KEY_PARMS));
 
 	rsakey->key.algorithmParms.algorithmID = TCPA_ALG_RSA;
 	rsakey->key.algorithmParms.parmSize = sizeof(TCPA_RSA_KEY_PARMS);
@@ -98,7 +100,6 @@ obj_rsakey_add(TSS_HCONTEXT tspContext, TSS_FLAG initFlags, TSS_HOBJECT *phObjec
 	}
 	rsaKeyParms.exponentSize = 0;
 	rsaKeyParms.numPrimes = 2;
-	memset(&rsakey->key.keyFlags, 0, sizeof(TCPA_KEY_FLAGS));
 
 	rsakey->key.pubKey.keyLength = 0;
 	rsakey->key.encSize = 0;
@@ -1721,14 +1722,14 @@ done:
 TSS_RESULT
 obj_rsakey_set_srk_pubkey(BYTE *pubkey)
 {
-	struct tsp_object *obj, *prev = NULL;
+	struct tsp_object *obj;
 	struct obj_list *list = &rsakey_list;
 	struct tr_rsakey_obj *rsakey;
 	TSS_RESULT result;
 
 	MUTEX_LOCK(list->lock);
 
-	for (obj = list->head; obj; prev = obj, obj = obj->next) {
+	for (obj = list->head; obj; obj = obj->next) {
 		rsakey = (struct tr_rsakey_obj *)obj->data;
 
 		/* we found the SRK, set this data as its public key */
@@ -1895,13 +1896,13 @@ done:
 void
 obj_rsakey_remove_policy_refs(TSS_HPOLICY hPolicy, TSS_HCONTEXT tspContext)
 {
-	struct tsp_object *obj, *prev = NULL;
+	struct tsp_object *obj;
 	struct obj_list *list = &rsakey_list;
 	struct tr_rsakey_obj *rsakey;
 
 	MUTEX_LOCK(list->lock);
 
-	for (obj = list->head; obj; prev = obj, obj = obj->next) {
+	for (obj = list->head; obj; obj = obj->next) {
 		if (obj->tspContext != tspContext)
 			continue;
 

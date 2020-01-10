@@ -26,6 +26,10 @@
 #include "tsplog.h"
 #include "obj.h"
 
+#define	PGSIZE sysconf(_SC_PAGESIZE)
+#define PGOFFSET (PGSIZE - 1)
+#define PGMASK (~PGOFFSET)
+
 /*
  *  popup_GetSecret()
  *
@@ -43,14 +47,14 @@ popup_GetSecret(UINT32 new_pin, UINT32 hash_mode, BYTE *popup_str, void *auth_ha
 {
 	BYTE secret[UI_MAX_SECRET_STRING_LENGTH] = { 0 };
 	BYTE *dflt = (BYTE *)"TSS Authentication Dialog";
-	UINT32 secret_len;
+	UINT32 secret_len = 0;
 	TSS_RESULT result;
 
 	if (popup_str == NULL)
 		popup_str = dflt;
 
 	/* pin the area where the secret will be put in memory */
-	if (pin_mem(secret, UI_MAX_SECRET_STRING_LENGTH)) {
+	if (pin_mem(&secret, UI_MAX_SECRET_STRING_LENGTH)) {
 		LogError("Failed to pin secret in memory.");
 		return TSPERR(TSS_E_INTERNAL_ERROR);
 	}
@@ -61,7 +65,7 @@ popup_GetSecret(UINT32 new_pin, UINT32 hash_mode, BYTE *popup_str, void *auth_ha
 		DisplayPINWindow(secret, &secret_len, popup_str);
 
 	if (!secret_len) {
-		unpin_mem(secret, UI_MAX_SECRET_STRING_LENGTH);
+		unpin_mem(&secret, UI_MAX_SECRET_STRING_LENGTH);
 		return TSPERR(TSS_E_POLICY_NO_SECRET);
 	}
 
@@ -73,8 +77,8 @@ popup_GetSecret(UINT32 new_pin, UINT32 hash_mode, BYTE *popup_str, void *auth_ha
 	result = Trspi_Hash(TSS_HASH_SHA1, secret_len, secret, auth_hash);
 
 	/* zero, then unpin the memory */
-	memset(secret, 0, secret_len);
-	unpin_mem(secret, UI_MAX_SECRET_STRING_LENGTH);
+	__tspi_memset(secret, 0, secret_len);
+	unpin_mem(&secret, UI_MAX_SECRET_STRING_LENGTH);
 
 	return result;
 }
@@ -88,6 +92,8 @@ pin_mem(void *addr, size_t len)
 		return 0;
 	}
 
+	len += (uintptr_t)addr & PGOFFSET;
+	addr = (void *)((uintptr_t)addr & PGMASK);
 	if (mlock(addr, len) == -1) {
 		LogError("mlock: %s", strerror(errno));
 		return 1;
@@ -99,12 +105,13 @@ pin_mem(void *addr, size_t len)
 int
 unpin_mem(void *addr, size_t len)
 {
-
 	/* only root can lock pages into RAM */
 	if (getuid() != (uid_t)0) {
 		return 0;
 	}
 
+	len += (uintptr_t)addr & PGOFFSET;
+	addr = (void *)((uintptr_t)addr & PGMASK);
 	if (munlock(addr, len) == -1) {
 		LogError("mlock: %s", strerror(errno));
 		return 1;

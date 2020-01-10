@@ -28,7 +28,7 @@
 #include "capabilities.h"
 #include "tsplog.h"
 #include "obj.h"
-
+#include "tcs_tsp.h"
 
 void
 Trspi_UnloadBlob_NONCE(UINT64 *offset, BYTE *blob, TPM_NONCE *n)
@@ -103,6 +103,7 @@ Trspi_LoadBlob(UINT64 *offset, size_t size, BYTE *to, BYTE *from)
 {
 	if (size == 0)
 		return;
+
 	if (to)
 		memcpy(&to[(*offset)], from, size);
 	(*offset) += size;
@@ -113,6 +114,7 @@ Trspi_UnloadBlob(UINT64 *offset, size_t size, BYTE *from, BYTE *to)
 {
 	if (size <= 0)
 		return;
+
 	if (to)
 		memcpy(to, &from[*offset], size);
 	(*offset) += size;
@@ -1445,6 +1447,8 @@ Trspi_Error_String(TSS_RESULT r)
 			case TSS_E_INVALID_KEYUSAGE:		return "Invalid usage of key";
 			case TSS_E_VERIFICATION_FAILED:		return "Internal validation of data failed";
 			case TSS_E_HASH_NO_IDENTIFIER:		return "Hash algorithm identifier not set";
+			case TSS_E_NV_AREA_EXIST:		return "NVRAM area already exists";
+			case TSS_E_NV_AREA_NOT_EXIST:		return "NVRAM area does not exist";
 			default:				return "Unknown";
 		}
 	}
@@ -1590,6 +1594,7 @@ Trspi_UNICODE_To_Native(BYTE *string, unsigned *size)
 
 	if ((tmplen = hacky_strlen("UTF-16", string)) == 0) {
 		LogDebug("hacky_strlen returned 0");
+		iconv_close(cd);
 		return 0;
 	}
 
@@ -2180,7 +2185,16 @@ Trspi_UnloadBlob_CERTIFY_INFO(UINT64 *offset, BYTE *blob, TPM_CERTIFY_INFO *c)
 	Trspi_UnloadBlob_NONCE(offset, blob, &c->data);
 	Trspi_UnloadBlob_BOOL(offset, (TSS_BOOL *)&c->parentPCRStatus, blob);
 	Trspi_UnloadBlob_UINT32(offset, &c->PCRInfoSize, blob);
-	Trspi_UnloadBlob(offset, c->PCRInfoSize, blob, c->PCRInfo);
+        if (c->PCRInfoSize != 0) {
+                c->PCRInfo = malloc(sizeof(TPM_PCR_INFO));
+                if (c->PCRInfo == NULL) {
+                        LogError("malloc of %zd bytes failed.", sizeof(TPM_PCR_INFO));
+                        return TSPERR(TSS_E_OUTOFMEMORY);
+                }
+        } else {
+                c->PCRInfo = NULL;
+        }
+        Trspi_UnloadBlob_PCR_INFO(offset, blob, (TPM_PCR_INFO *)c->PCRInfo);
 
 	return TSS_SUCCESS;
 }
@@ -2732,6 +2746,66 @@ Trspi_UnloadBlob_CAP_VERSION_INFO(UINT64 *offset, BYTE *blob, TPM_CAP_VERSION_IN
 	} else {
 		v->vendorSpecific = NULL;
 	}
+
+	return TSS_SUCCESS;
+}
+
+TSS_RESULT
+Trspi_UnloadBlob_NV_INDEX(UINT64 *offset, BYTE *blob, TPM_NV_INDEX *v)
+{
+	if (!v) {
+		Trspi_UnloadBlob_UINT32(offset, NULL, blob);
+
+		return TSS_SUCCESS;
+	}
+
+	Trspi_UnloadBlob_UINT32(offset, v, blob);
+
+	return TSS_SUCCESS;
+}
+
+TSS_RESULT
+Trspi_UnloadBlob_NV_ATTRIBUTES(UINT64 *offset, BYTE *blob, TPM_NV_ATTRIBUTES *v)
+{
+	if (!v) {
+		Trspi_UnloadBlob_UINT16(offset, NULL, blob);
+		Trspi_UnloadBlob_UINT32(offset, NULL, blob);
+
+		return TSS_SUCCESS;
+	}
+
+	Trspi_UnloadBlob_UINT16(offset, &v->tag, blob);
+	Trspi_UnloadBlob_UINT32(offset, &v->attributes, blob);
+
+	return TSS_SUCCESS;
+}
+
+TSS_RESULT
+Trspi_UnloadBlob_NV_DATA_PUBLIC(UINT64 *offset, BYTE *blob, TPM_NV_DATA_PUBLIC *v)
+{
+	if (!v) {
+		Trspi_UnloadBlob_UINT16(offset, NULL, blob);
+		Trspi_UnloadBlob_NV_INDEX(offset, blob, NULL);
+		Trspi_UnloadBlob_PCR_INFO_SHORT(offset, blob, NULL);
+		Trspi_UnloadBlob_PCR_INFO_SHORT(offset, blob, NULL);
+		Trspi_UnloadBlob_NV_ATTRIBUTES(offset, blob, NULL);
+		Trspi_UnloadBlob_BYTE(offset, NULL, blob);
+		Trspi_UnloadBlob_BYTE(offset, NULL, blob);
+		Trspi_UnloadBlob_BYTE(offset, NULL, blob);
+		Trspi_UnloadBlob_UINT32(offset, NULL, blob);
+
+		return TSS_SUCCESS;
+	}
+
+	Trspi_UnloadBlob_UINT16(offset, &v->tag, blob);
+	Trspi_UnloadBlob_NV_INDEX(offset, blob, &v->nvIndex);
+	Trspi_UnloadBlob_PCR_INFO_SHORT(offset, blob, &v->pcrInfoRead);
+	Trspi_UnloadBlob_PCR_INFO_SHORT(offset, blob, &v->pcrInfoWrite);
+	Trspi_UnloadBlob_NV_ATTRIBUTES(offset, blob, &v->permission);
+	Trspi_UnloadBlob_BYTE(offset, &v->bReadSTClear, blob);
+	Trspi_UnloadBlob_BYTE(offset, &v->bWriteSTClear, blob);
+	Trspi_UnloadBlob_BYTE(offset, &v->bWriteDefine, blob);
+	Trspi_UnloadBlob_UINT32(offset, &v->dataSize, blob);
 
 	return TSS_SUCCESS;
 }

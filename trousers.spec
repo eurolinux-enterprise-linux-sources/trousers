@@ -1,21 +1,18 @@
-%global name         trousers
-%global version      0.3.4
-%global tarballrev   -1
-%global release      4
-
-Name: %{name}
-Summary: TCG's Software Stack v1.2 
-Version: %{version}
-Release: %{release}%{?dist}
-License: CPL
+Name: trousers
+Summary: TCG's Software Stack v1.2
+Version: 0.3.13
+Release: 2%{?dist}
+License: BSD
 Group: System Environment/Libraries
 Url: http://trousers.sourceforge.net
+
 Source0: http://downloads.sourceforge.net/%{name}/%{name}-%{version}.tar.gz
-# Patch from upstream cleaning up some use of free()
-Patch1: trousers-0.3.4-free.patch
-Patch2: trousers-0.3.4-init-lsb.patch
+Patch1: trousers-0.3.4-init-lsb.patch
+Patch2: trousers-0.3.13-nostrict-alias.patch
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 BuildRequires: libtool, openssl-devel
+# Remove when strict-aliasing issues are fixed
+BuildRequires: autoconf automake
 Requires(pre): shadow-utils
 Requires(post): chkconfig
 Requires(preun): chkconfig
@@ -53,10 +50,13 @@ applications.
 %setup -q
 %patch1 -p1
 %patch2 -p1
+autoreconf -fv --install
+# fix man page paths
+sed -i -e 's|/var/tpm|/var/lib/tpm|g' -e 's|/usr/local/var|/var|g' man/man5/tcsd.conf.5.in man/man8/tcsd.8.in
 
 %build
 %configure --with-gui=openssl
-make %{?_smp_mflags}
+make -k %{?_smp_mflags}
 
 %install
 rm -rf ${RPM_BUILD_ROOT}
@@ -107,6 +107,7 @@ fi
 %files devel
 # The files to be used by developers, 'trousers-devel'
 %defattr(-, root, root, -)
+%doc doc/LTC-TSS_LLD_08_r2.pdf doc/TSS_programming_SNAFUs.txt
 %attr(0755, root, root) %{_libdir}/libtspi.so
 %{_includedir}/tss/
 %{_includedir}/trousers/
@@ -118,6 +119,14 @@ fi
 %{_libdir}/libtddl.a
 
 %changelog
+* Fri Jun 06 2014 Steve Grubb <sgrubb@redhat.com> 0.3.13-2
+- Fix strict alias warning
+
+* Mon Jun 02 2014 Steve Grubb <sgrubb@redhat.com> 0.3.13-1
+- New upstream bug fix release
+resolves: #633584 - Pick up latest TrouSerS package
+resolves: #1074634 - Buffer overflow detected in TrouSerS daemon
+
 * Wed Jul 07 2010 Steve Grubb <sgrubb@redhat.com> 0.3.4-4
 - Adjusted patch
 resolves: #593673 Not LSB compliant initscript for tcsd daemon

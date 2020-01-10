@@ -1,3 +1,84 @@
+* TROUSERS_0_3_13
+- Changed exported functions which had a name too common, to avoid collision
+- Assessed daemon security using manual techniques and coverit
+- Fixed major security bugs and memory leaks
+- Added debug support to run tcsd with a different user/group
+- Daemon now properly closes sockets before shutting down
+
+* TROUSERS_0_3_12
+- Added new network code for RPC, which supports IPv6
+- Users of client applications can configure the hostname of the tcsd server
+they want to connect through the TSS_TCSD_HOSTNAME env var (only works if
+application didn't set a hostname in the context)
+- Added disable_ipv4 and disable_ipv6 config options for server
+
+* TROUSERS_0_3_11
+- Fix build process for distros
+- License was changed from GPL to BSD
+- Many bugfixes
+- updated man pages
+
+* TROUSERS_0_3_8
+
+- Fix ssl_ui.c overflow
+- Handling of TPM_CERTIFY_INFO2 structure special case
+- Fix possible obfuscation of obj_migdata.c errors.
+- Make 1.2 keys respect the TPM_PCRIGNOREDONREAD flag.
+- PCRInfo member allocation in Trspi_Unload_CERTIFY_INFO.
+- Add functions for deserializing NVRAM related data structures
+- Add NVRAM specific error messages
+- Fix spec file so one can build an rpm
+- Initialize the tcsd_config_file with NULL.
+- support for -c <configfile> command line option
+- Establish a .gitignore file
+- ENDIAN_H and htole definition fix
+
+* TROUSERS_0_3_7
+
+- __tspi_freeTable wrong call
+- Owner Evict pubkey setup fix
+- The "HAVE_ENDIAN_H" check is missing from configure.in, but it appears to be needed in a couple of the source files.
+- tspi_context.c fix (memleak)
+- Added the missing setup of a tcs handle for owner evict keys.
+- No need to initialize the flock structure.
+- flock to fcntl change
+- Fixed cleanup code in svrside.c
+- Avoid warning of missing return in tcsd_thread_run()
+- printf() warning fix
+- Moved hDAA debug message after initialization
+- Additional length check
+- Tspi_NV_DefineSpace secret check fix
+
+* TROUNSERS_0_3_6
+
+- Fixed a number of warnings during a build with --debug regarding THREAD ID
+  definition
+- Removed htole() dependency, which was included only in glibc 2.9
+
+* TROUSERS_0_3_5
+
+- Allowed TCD Daemon to run with reduced privileges In Solaris.
+- Fixing previous kfreebsd build patch conflict with the current tree.
+- TCSD error handling improvements.
+- mutex init inclusion.
+- pthread_t portability fix
+- Owner Evict keys load fix.
+- Big- endian issues.
+- Memory leak fix.
+- Adding missing #include <limits.h>.
+- kfreebsd build fixes.
+- Fixed usage of syslog().
+- 64bits clean
+- Fixes the TCP UN and IN socket connection attempt handling
+- Fixes logic on opening a hardware TPM.
+- Added communication through TCP to software TPMs in TrouSerS.
+- Fixed conflicting defines
+- Adds missing free()
+- Fixed fread() return value check.
+- Made the previous fix cleaner and more robust.
+- Added missing check in order to avoid freeing buffer that's out of Tspi_Data_Seal() scope.
+- Fixed Tspi_TPM_GetRandom 4kb output limit.
+
 * TROUSERS_0_3_4
 
 - Fixed TrouSerS mishandling of TPM auth sessions

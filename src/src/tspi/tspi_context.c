@@ -55,6 +55,8 @@ Tspi_Context_Close(TSS_HCONTEXT tspContext)	/* in */
 	/* Destroy all objects */
 	obj_close_context(tspContext);
 
+	Tspi_Context_FreeMemory(tspContext, NULL);
+
 	/* close the ps file */
 	PS_close();
 
@@ -356,6 +358,10 @@ Tspi_Context_CloseObject(TSS_HCONTEXT tspContext,	/* in */
 	} else if (obj_is_migdata(hObject)) {
 #ifdef TSS_BUILD_CMK
 		result = obj_migdata_remove(hObject, tspContext);
+#endif
+	} else if (obj_is_nvstore(hObject)) {
+#ifdef TSS_BUILD_NV
+		result = obj_nvstore_remove(hObject, tspContext);
 #endif
 	} else {
 		result = TSPERR(TSS_E_INVALID_HANDLE);

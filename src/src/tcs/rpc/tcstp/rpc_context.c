@@ -34,7 +34,7 @@ tcs_wrap_OpenContext(struct tcsd_thread_data *data)
 	TSS_RESULT result;
 	UINT32 tpm_version = tpm_metrics.version.minor;
 
-	LogDebugFn("thread %zd", THREAD_ID);
+	LogDebugFn("thread %ld", THREAD_ID);
 
 	result = TCS_OpenContext_Internal(&hContext);
 	if (result == TSS_SUCCESS) {
@@ -49,6 +49,8 @@ tcs_wrap_OpenContext(struct tcsd_thread_data *data)
 		 * and the connection can't be closed cleanly, we'll still have a reference
 		 * to what resources need to be freed. */
 		data->context = hContext;
+
+		LogDebug("New context is 0x%x", hContext);
 	} else
 		initData(&data->comm, 0);
 
@@ -66,7 +68,7 @@ tcs_wrap_CloseContext(struct tcsd_thread_data *data)
 	if (getData(TCSD_PACKET_TYPE_UINT32, 0, &hContext, 0, &data->comm))
 		return TCSERR(TSS_E_INTERNAL_ERROR);
 
-	LogDebugFn("thread %zd context %x", THREAD_ID, hContext);
+	LogDebugFn("thread %ld context %x", THREAD_ID, hContext);
 
 	result = TCS_CloseContext_Internal(hContext);
 

@@ -38,7 +38,10 @@ tcs_wrap_CMK_SetRestrictions(struct tcsd_thread_data *data)
 	if (getData(TCSD_PACKET_TYPE_UINT32, 0, &hContext, 0, &data->comm))
 		return TCSERR(TSS_E_INTERNAL_ERROR);
 
-	LogDebugFn("thread %zd context %x", THREAD_ID, hContext);
+	if ((result = ctx_verify_context(hContext)))
+		goto done;
+
+	LogDebugFn("thread %ld context %x", THREAD_ID, hContext);
 
 	if (getData(TCSD_PACKET_TYPE_UINT32, 1, &restriction, 0, &data->comm))
 		return TCSERR(TSS_E_INTERNAL_ERROR);
@@ -57,7 +60,7 @@ tcs_wrap_CMK_SetRestrictions(struct tcsd_thread_data *data)
 		if (setData(TCSD_PACKET_TYPE_AUTH, 0, &ownerAuth, 0, &data->comm))
 			return TCSERR(TSS_E_INTERNAL_ERROR);
 	} else
-		initData(&data->comm, 0);
+done:		initData(&data->comm, 0);
 
 	data->comm.hdr.u.result = result;
 
@@ -76,7 +79,10 @@ tcs_wrap_CMK_ApproveMA(struct tcsd_thread_data *data)
 	if (getData(TCSD_PACKET_TYPE_UINT32, 0, &hContext, 0, &data->comm))
 		return TCSERR(TSS_E_INTERNAL_ERROR);
 
-	LogDebugFn("thread %zd context %x", THREAD_ID, hContext);
+	if ((result = ctx_verify_context(hContext)))
+		goto done;
+
+	LogDebugFn("thread %ld context %x", THREAD_ID, hContext);
 
 	if (getData(TCSD_PACKET_TYPE_DIGEST, 1, &migAuthorityDigest, 0, &data->comm))
 		return TCSERR(TSS_E_INTERNAL_ERROR);
@@ -99,7 +105,7 @@ tcs_wrap_CMK_ApproveMA(struct tcsd_thread_data *data)
 		if (setData(TCSD_PACKET_TYPE_DIGEST, 1, &migAuthorityApproval, 0, &data->comm))
 			return TCSERR(TSS_E_INTERNAL_ERROR);
 	} else
-		initData(&data->comm, 0);
+done:		initData(&data->comm, 0);
 
 	data->comm.hdr.u.result = result;
 
@@ -125,7 +131,10 @@ tcs_wrap_CMK_CreateKey(struct tcsd_thread_data *data)
 	if (getData(TCSD_PACKET_TYPE_UINT32, 0, &hContext, 0, &data->comm))
 		return TCSERR(TSS_E_INTERNAL_ERROR);
 
-	LogDebugFn("thread %zd context %x", THREAD_ID, hContext);
+	if ((result = ctx_verify_context(hContext)))
+		goto done;
+
+	LogDebugFn("thread %ld context %x", THREAD_ID, hContext);
 
 	if (getData(TCSD_PACKET_TYPE_UINT32, 1, &hKey, 0, &data->comm))
 		return TCSERR(TSS_E_INTERNAL_ERROR);
@@ -187,7 +196,7 @@ tcs_wrap_CMK_CreateKey(struct tcsd_thread_data *data)
 				return TCSERR(TSS_E_INTERNAL_ERROR);
 		}
 	} else
-		initData(&data->comm, 0);
+done:		initData(&data->comm, 0);
 
 	data->comm.hdr.u.result = result;
 
@@ -210,7 +219,10 @@ tcs_wrap_CMK_CreateTicket(struct tcsd_thread_data *data)
 	if (getData(TCSD_PACKET_TYPE_UINT32, 0, &hContext, 0, &data->comm))
 		return TCSERR(TSS_E_INTERNAL_ERROR);
 
-	LogDebugFn("thread %zd context %x", THREAD_ID, hContext);
+	if ((result = ctx_verify_context(hContext)))
+		goto done;
+
+	LogDebugFn("thread %ld context %x", THREAD_ID, hContext);
 
 	if (getData(TCSD_PACKET_TYPE_UINT32, 1, &publicVerifyKeySize, 0, &data->comm))
 		return TCSERR(TSS_E_INTERNAL_ERROR);
@@ -270,7 +282,7 @@ tcs_wrap_CMK_CreateTicket(struct tcsd_thread_data *data)
 		if (setData(TCSD_PACKET_TYPE_DIGEST, 1, &sigTicket, 0, &data->comm))
 			return TCSERR(TSS_E_INTERNAL_ERROR);
 	} else
-		initData(&data->comm, 0);
+done:		initData(&data->comm, 0);
 
 	data->comm.hdr.u.result = result;
 
@@ -300,7 +312,10 @@ tcs_wrap_CMK_CreateBlob(struct tcsd_thread_data *data)
 	if (getData(TCSD_PACKET_TYPE_UINT32, 0, &hContext, 0, &data->comm))
 		return TCSERR(TSS_E_INTERNAL_ERROR);
 
-	LogDebugFn("thread %zd context %x", THREAD_ID, hContext);
+	if ((result = ctx_verify_context(hContext)))
+		goto done;
+
+	LogDebugFn("thread %ld context %x", THREAD_ID, hContext);
 
 	if (getData(TCSD_PACKET_TYPE_UINT32, 1, &hKey, 0, &data->comm))
 		return TCSERR(TSS_E_INTERNAL_ERROR);
@@ -475,7 +490,7 @@ tcs_wrap_CMK_CreateBlob(struct tcsd_thread_data *data)
 		}
 		free(outData);
 	} else
-		initData(&data->comm, 0);
+done:		initData(&data->comm, 0);
 
 	data->comm.hdr.u.result = result;
 
@@ -503,7 +518,10 @@ tcs_wrap_CMK_ConvertMigration(struct tcsd_thread_data *data)
 	if (getData(TCSD_PACKET_TYPE_UINT32, 0, &hContext, 0, &data->comm))
 		return TCSERR(TSS_E_INTERNAL_ERROR);
 
-	LogDebugFn("thread %zd context %x", THREAD_ID, hContext);
+	if ((result = ctx_verify_context(hContext)))
+		goto done;
+
+	LogDebugFn("thread %ld context %x", THREAD_ID, hContext);
 
 	if (getData(TCSD_PACKET_TYPE_UINT32, 1, &hKey, 0, &data->comm))
 		return TCSERR(TSS_E_INTERNAL_ERROR);
@@ -608,7 +626,7 @@ tcs_wrap_CMK_ConvertMigration(struct tcsd_thread_data *data)
 		}
 		free(outData);
 	} else
-		initData(&data->comm, 0);
+done:		initData(&data->comm, 0);
 
 	data->comm.hdr.u.result = result;
 
