@@ -1,7 +1,7 @@
 Name: trousers
 Summary: TCG's Software Stack v1.2
 Version: 0.3.11.2
-Release: 1%{?dist}
+Release: 3%{?dist}
 License: BSD
 Group: System Environment/Libraries
 Url: http://trousers.sourceforge.net
@@ -108,6 +108,12 @@ exit 0
 %{_libdir}/libtddl.a
 
 %changelog
+* Fri Jan 24 2014 Daniel Mach <dmach@redhat.com> - 0.3.11.2-3
+- Mass rebuild 2014-01-24
+
+* Fri Dec 27 2013 Daniel Mach <dmach@redhat.com> - 0.3.11.2-2
+- Mass rebuild 2013-12-27
+
 * Mon Aug 19 2013 Steve Grubb <sgrubb@redhat.com> 0.3.11.2-1
 - New upstream bug fix and license change release
 
