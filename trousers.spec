@@ -1,7 +1,7 @@
 Name: trousers
 Summary: TCG's Software Stack v1.2
-Version: 0.3.11.2
-Release: 4%{?dist}
+Version: 0.3.13
+Release: 1%{?dist}
 License: BSD
 Group: System Environment/Libraries
 Url: http://trousers.sourceforge.net
@@ -14,7 +14,6 @@ Requires(pre): shadow-utils
 Requires(post): systemd-units
 Requires(preun): systemd-units
 Requires(postun): systemd-units
-Patch0:           rhbz-1071171-1224558.patch
 
 %description
 TrouSerS is an implementation of the Trusted Computing Group's Software Stack
@@ -45,7 +44,6 @@ applications.
 
 %prep
 %setup -q
-%patch0 -p1
 
 sed -i -e 's|/var/tpm|/var/lib/tpm|g' -e 's|/usr/local/var|/var|g' man/man5/tcsd.conf.5.in man/man8/tcsd.8.in
 
@@ -110,12 +108,8 @@ exit 0
 %{_libdir}/libtddl.a
 
 %changelog
-* Tue Jun 23 2015 Scientific Linux Auto Patch Process <SCIENTIFIC-LINUX-DEVEL@LISTSERV.FNAL.GOV>
-- Eliminated rpmbuild "bogus date" error due to inconsistent weekday,
-  by assuming the date is correct and changing the weekday.
-
-* Tue May 26 2015 Avesh Agarwal <avagarwa@redhat.com> - 0.3.11.2-4
-Resolves: rhbz#1224558
+* Sun May 24 2015 Avesh Agarwal <avagarwa@redhat.com> 0.3.13-1
+Resolves: rhbz#1173221 New upstream bug fix release
 
 * Fri Jan 24 2014 Daniel Mach <dmach@redhat.com> - 0.3.11.2-3
 - Mass rebuild 2014-01-24

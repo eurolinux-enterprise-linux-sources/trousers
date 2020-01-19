@@ -499,8 +499,7 @@ tpm_rsp_parse(TPM_COMMAND_CODE ordinal, BYTE *b, UINT32 len, ...)
 		} else if (auth2) {
 			offset1 = offset2 = len - TSS_TPM_RSP_BLOB_AUTH_LEN;
 			UnloadBlob_Auth(&offset1, b, auth2);
-		} else
-			offset2 = len;
+		}
 
 		offset1 = TSS_TPM_TXBLOB_HDR_LEN;
 		offset2 -= TSS_TPM_TXBLOB_HDR_LEN;
@@ -918,6 +917,7 @@ tpm_rsp_parse(TPM_COMMAND_CODE ordinal, BYTE *b, UINT32 len, ...)
 	default:
 		LogError("Unknown ordinal: 0x%x", ordinal);
 		result = TCSERR(TSS_E_INTERNAL_ERROR);
+		va_end(ap);
 		break;
 	}
 
@@ -2197,6 +2197,7 @@ tpm_rqu_build(TPM_COMMAND_CODE ordinal, UINT64 *outOffset, BYTE *out_blob, ...)
 	}
 #endif
 	default:
+		va_end(ap);
 		LogError("Unknown ordinal: 0x%x", ordinal);
 		break;
 	}
