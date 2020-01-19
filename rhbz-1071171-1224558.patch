@@ -1,0 +1,21 @@
+diff -ur trousers-0.3.11.2/src/tspi/rpc/hosttable.c trousers-0.3.11.2.new/src/tspi/rpc/hosttable.c
+--- trousers-0.3.11.2/src/tspi/rpc/hosttable.c	2013-07-12 18:27:37.000000000 +0200
++++ trousers-0.3.11.2.new/src/tspi/rpc/hosttable.c	2014-02-28 12:13:25.763293218 +0100
+@@ -39,7 +39,7 @@
+ #pragma init(_init)
+ void _init(void)
+ #else
+-void __attribute__ ((constructor)) my_init(void)
++static void __attribute__ ((constructor)) my_init(void)
+ #endif
+ {
+ 	host_table_init();
+@@ -73,7 +72,7 @@
+ #pragma fini(_fini)
+ void _fini(void)
+ #else
+-void __attribute__ ((destructor)) my_fini(void)
++static void __attribute__ ((destructor)) my_fini(void)
+ #endif
+ {
+ 	host_table_final();
