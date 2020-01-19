@@ -1,8 +1,8 @@
 #
-# configure.in for the trousers project
+# configure.ac for the trousers project
 #
 
-AC_INIT(trousers, 0.3.13, trousers-tech@lists.sf.net)
+AC_INIT(trousers, 0.3.14, trousers-tech@lists.sf.net)
 
 TSS_SPEC_MAJOR=1
 TSS_SPEC_MINOR=2
@@ -11,7 +11,7 @@ TSS_VER_MINOR=3
 
 # compute $target
 AC_CANONICAL_TARGET
-AM_INIT_AUTOMAKE([foreign 1.6])
+AM_INIT_AUTOMAKE([foreign subdir-objects 1.6])
 
 # Debugging support
 AC_ARG_ENABLE([debug],
@@ -35,12 +35,18 @@ fi
 
 # Arch specific stuff
 case $target in
+	*darwin*)
+        	TCSD_LDFLAGS=""
+        	;;
 	*solaris*)
 		CFLAGS="$CFLAGS -DSOLARIS"
 		;;
         *)
+        	TCSD_LDFLAGS="-pie -Wl,-z,relro -Wl,-z,now"
                 ;;
 esac
+
+AC_SUBST(TCSD_LDFLAGS)
 
 # Non-standard OpenSSL location
 AC_MSG_CHECKING([Non-standard OpenSSL location])

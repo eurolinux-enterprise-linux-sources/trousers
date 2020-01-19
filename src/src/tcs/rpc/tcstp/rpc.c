@@ -524,7 +524,8 @@ access_control(struct tcsd_thread_data *thread_data)
 	struct sockaddr *sa;
 	socklen_t sas_len = sizeof(sas);
 
-	if (!getpeername(thread_data->sock, (struct sockaddr *)&sas, &sas_len)) {
+	if (getpeername(thread_data->sock, (struct sockaddr *)&sas,
+			&sas_len) == -1) {
 		LogError("Error retrieving local socket address: %s", strerror(errno));
 		return 1;
 	}
@@ -535,14 +536,15 @@ access_control(struct tcsd_thread_data *thread_data)
 	// Check if it's localhost for both inet protocols
 	if (sa->sa_family == AF_INET) {
 		struct sockaddr_in *sa_in = (struct sockaddr_in *)sa;
-		uint32_t nloopaddr = htonl(INADDR_LOOPBACK);
+		in_addr_t nloopaddr = htonl(INADDR_LOOPBACK);
 		if (memcmp(&sa_in->sin_addr.s_addr, &nloopaddr,
-					sizeof(struct sockaddr_in)) == 0)
+					sizeof(in_addr_t)) == 0)
 			is_localhost = 1;
+        }
 	else if (sa->sa_family == AF_INET6) {
 		struct sockaddr_in6 *sa_in6 = (struct sockaddr_in6 *)sa;
 		if (memcmp(&sa_in6->sin6_addr.s6_addr, &in6addr_loopback,
-					sizeof(struct sockaddr_in6)) == 0)
+					sizeof(struct in6_addr)) == 0)
 			is_localhost = 1;
 	}
 
@@ -550,7 +552,7 @@ access_control(struct tcsd_thread_data *thread_data)
 	 * approve it */
 	if (is_localhost)
 		return 0;
-	} else {
+	else {
 		while (tcsd_options.remote_ops[i]) {
 			if ((UINT32)tcsd_options.remote_ops[i] == thread_data->comm.hdr.u.ordinal) {
 				LogInfo("Accepted %s operation from %s",

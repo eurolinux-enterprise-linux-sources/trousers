@@ -1,7 +1,7 @@
 Name: trousers
 Summary: TCG's Software Stack v1.2
-Version: 0.3.13
-Release: 1%{?dist}
+Version: 0.3.14
+Release: 2%{?dist}
 License: BSD
 Group: System Environment/Libraries
 Url: http://trousers.sourceforge.net
@@ -14,6 +14,8 @@ Requires(pre): shadow-utils
 Requires(post): systemd-units
 Requires(preun): systemd-units
 Requires(postun): systemd-units
+# submitted upstream https://sourceforge.net/p/trousers/mailman/message/35766729/
+Patch0001: unlock-in-err-path.patch
 
 %description
 TrouSerS is an implementation of the Trusted Computing Group's Software Stack
@@ -43,7 +45,8 @@ Header files and man pages for use in creating Trusted Computing enabled
 applications.
 
 %prep
-%setup -q
+%setup -cq
+%patch1 -p1
 
 sed -i -e 's|/var/tpm|/var/lib/tpm|g' -e 's|/usr/local/var|/var|g' man/man5/tcsd.conf.5.in man/man8/tcsd.8.in
 
@@ -108,6 +111,12 @@ exit 0
 %{_libdir}/libtddl.a
 
 %changelog
+* Mon Apr 03 2017 Jerry Snitselaar <jsnitsel@redhat.com> 0.3.14-2
+- release mutex in err path for obj_context_set_machine_name
+
+* Thu Mar 30 2017 Jerry Snitselaar <jsnitsel@redhat.com> 0.3.14-1
+Resolves: rhbz#1384446 Rebase Trousers to latest version
+
 * Sun May 24 2015 Avesh Agarwal <avagarwa@redhat.com> 0.3.13-1
 Resolves: rhbz#1173221 New upstream bug fix release
 
